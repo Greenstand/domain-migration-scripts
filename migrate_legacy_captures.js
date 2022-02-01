@@ -157,7 +157,7 @@ async function migrate() {
         const treeAttributes = await trx
           .select()
           .table("public.tree_attributes")
-          .where("tree_id", +legacyTree.id);
+          .where("tree_id", legacyTree.id);
 
         const captureToInsert = createCapture(
           legacyTree,
@@ -174,7 +174,7 @@ async function migrate() {
       values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
           ST_PointFromText(?, 4325), ST_SetSRID(ST_PointFromText(?, 4326)))`,
           [
-            captureToInsert.id,
+            captureToInsert.reference_id,
             captureToInsert.image_url,
             captureToInsert.lat,
             captureToInsert.lon,
