@@ -46,8 +46,8 @@ async function ensureGrowerAccountExists(legacyTree, transaction) {
     );
   }
   let growerAccount = await transaction("treetracker.grower_account")
-    .where("email", planter.email)
-    .orWhere("phone", planter.phone)
+    .where("wallet", planter.email)
+    .orWhere("wallet", planter.phone)
     .first();
   if (!growerAccount) {
     console.log(
@@ -67,7 +67,7 @@ async function ensureGrowerAccountExists(legacyTree, transaction) {
         image_rotation: planter.image_rotation ?? 0,
         organization_id: planter.organization_id,
         wallet_id: generate_uuid_v4(), // TODO: temporary workaround, needs to be a specific uuid and not a newly generated one.
-        wallet: "Temporary placeholder",
+        wallet: planter.email ?? planter.phone,
         first_registration_at: new Date(),
       },
       [
