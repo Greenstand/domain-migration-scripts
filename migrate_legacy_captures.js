@@ -18,6 +18,8 @@ const Writable = require("stream").Writable;
 const ws = Writable({ objectMode: true });
 const ProgressBar = require("progress");
 
+const TEMPORARY_DEVICE_CONFIG_ID = "3cd6ff18-b0a7-41f2-bda2-f73daf1d6674";
+
 async function ensureGrowerAccountExists(legacyTree, transaction) {
   let planter = null;
   if (!legacyTree.planter_identifier && !legacyTree.planter_id) {
@@ -36,8 +38,11 @@ async function ensureGrowerAccountExists(legacyTree, transaction) {
     planter = await transaction
       .select()
       .table("public.planter")
+      .leftJoin("public.planter_registrations", "public.planter.id", "public.planter_registrations.planter_id")
       .where("email", legacyTree.planter_identifier)
       .orWhere("phone", legacyTree.planter_identifier)
+      .orderBy("created_at", "desc")
+      .limit(1)
       .first();
   }
   if (!planter) {
@@ -56,29 +61,25 @@ async function ensureGrowerAccountExists(legacyTree, transaction) {
     console.log(
       `Populating grower account for ${legacyTree.planter_identifier}`
     );
-    // status, first_registration_at aren't available in the source `public.planter` table
-    // Is it ok, if the above attributes take the db defaults?
     growerAccount = await transaction("treetracker.grower_account").insert(
       {
         name: planter.first_name + " " + planter.last_name,
         email: planter.email,
         phone: planter.phone,
-        image_url: planter.image_url ?? legacyTree.planter_photo_url, //should this be public.trees.planter_photo_url?
+        image_url: planter.image_url,
         image_rotation: planter.image_rotation ?? 0,
-        organization_id: planter.organization_id,
-        wallet_id: generate_uuid_v4(), // TODO: temporary workaround, needs to be a specific uuid and not a newly generated one.
+        // organization_id: planter.organization_id,
         wallet: planter.email ?? planter.phone,
-        first_registration_at: new Date(),
+        first_registration_at: planter.created_at,
       },
       [
         "id",
-        "wallet_id",
         "name",
         "email",
         "phone",
         "organization_id",
         "image_url",
-        "image_rotation",
+        "image_rotation"
       ]
     );
   }
@@ -89,7 +90,7 @@ async function ensureGrowerAccountExists(legacyTree, transaction) {
 async function migrate() {
   try {
     const base_query_string = `select t.* from public.trees t left join treetracker.capture c on t.id = c.reference_id
-                                where t.active=true and t.approved=true and t.image_url != null and
+                                where t.active=true and t.approved=true and t.image_url is not null and
                                 c.reference_id is null`;
     const rowCountResult = await knex.select(
       knex.raw(`count(1) from (${base_query_string}) as src`)
@@ -114,7 +115,6 @@ async function migrate() {
       {
         id,
         time_created,
-        planter_photo_url,
         gps_accuracy,
         image_url,
         lat,
@@ -133,17 +133,15 @@ async function migrate() {
         lat: lat,
         lon: lon,
         gps_accuracy: gps_accuracy,
-        grower_id: growerAccount.id,
-        grower_photo_url: planter_photo_url,
-        grower_username: "-", //TODO: What should be used for username here?
+        grower_account_id: growerAccount.id,
         morphology: morphology,
         age: age,
         note: note,
         attributes: attributesFormatter(treeAttributes),
         created_at: time_created,
         updated_at: time_updated,
-        device_configuration_id: uuid_generate_v4(), // should this take value of device_identifier
-        session_id: uuid_generate_v4(), // TODO: Is this appropriate to generate uuid here?
+        device_configuration_id: TEMPORARY_DEVICE_CONFIG_ID, //To be populated with field_data.device_configuration_id later
+        session_id: uuid_generate_v4(), // Concept of session doesn't exist for legacy data
       });
     };
 
@@ -167,7 +165,7 @@ async function migrate() {
         const { lat, lon } = captureToInsert;
         await transaction.raw(
           `insert into treetracker.capture (
-        reference_id, image_url, lat, lon, gps_accuracy, grower_id, grower_photo_url, grower_username,
+        reference_id, image_url, lat, lon, gps_accuracy, grower_account_id, 
         morphology, age, note, attributes, created_at, updated_at, device_configuration_id, session_id,
         estimated_geometric_location, estimated_geographic_location 
       )
@@ -179,9 +177,7 @@ async function migrate() {
             captureToInsert.lat,
             captureToInsert.lon,
             captureToInsert.gps_accuracy,
-            captureToInsert.grower_id,
-            captureToInsert.grower_photo_url,
-            captureToInsert.grower_username,
+            captureToInsert.grower_account_id,
             captureToInsert.morphology,
             captureToInsert.age,
             captureToInsert.note,
@@ -206,7 +202,9 @@ async function migrate() {
       next();
     };
 
-    if (rowCountResult > 0) {
+
+    if (rowCountResult[0].count > 0) {
+      console.log(`begin migration...`)
       const stream = knex.raw(`${base_query_string}`).stream();
       stream.pipe(ws);
     }
