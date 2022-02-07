@@ -27,9 +27,24 @@ async function ensureGrowerAccountExists(legacyTree, transaction) {
   }
   if (legacyTree.planter_id) {
     planter = await transaction
-      .select()
+      .select(
+        `public.planter.id as id`,
+        `public.planter.first_name as first_name`,
+        `public.planter.last_name as last_name`,
+        `public.planter.email as email`,
+        `public.planter.organization as organization`,
+        `public.planter.phone as phone`,
+        `public.planter.image_url as image_url`,
+        `public.planter.person_id as person_id`,
+        `public.planter.organization_id as organization_id`,
+        `public.planter.image_rotation as image_rotation`,
+        `public.planter_registrations.created_at as created_at`
+      )
       .table("public.planter")
-      .where("id", legacyTree.planter_id)
+      .leftJoin("public.planter_registrations", "public.planter.id", "public.planter_registrations.planter_id")
+      .where("public.planter.id", legacyTree.planter_id)
+      .orderBy("created_at", "desc")
+      .limit(1)
       .first();
   } else if (
     legacyTree.planter_identifier &&
@@ -45,31 +60,35 @@ async function ensureGrowerAccountExists(legacyTree, transaction) {
       .limit(1)
       .first();
   }
+  // console.log(`planter is ${JSON.stringify(planter)}`);
   if (!planter) {
     throw Error(
       `No planter record found for tree entry with id ${legacyTree.id}`
     );
   }
-  let growerAccount = await transaction("treetracker.grower_account")
-    .where("wallet", planter.email)
-    .orWhere("wallet", planter.phone)
+  
+  let growerAccount = null;
+  if (planter.email || planter.phone) {
+    growerAccount = await transaction("treetracker.grower_account")
+    .where("wallet", planter.email ?? null)
+    .orWhere("wallet", planter.phone ?? null)
     .first();
+    console.log(`grower account lookup result ${growerAccount}`)
+  }
   if (!growerAccount) {
     console.log(
-      `GrowerAccount not found for planter_identifier ${legacyTree.planter_identifier}`
+      `GrowerAccount not found...populating grower account for ${legacyTree.planter_identifier}`
     );
-    console.log(
-      `Populating grower account for ${legacyTree.planter_identifier}`
-    );
-    growerAccount = await transaction("treetracker.grower_account").insert(
+   
+    let growerAccounts = await transaction("treetracker.grower_account").insert(
       {
         name: planter.first_name + " " + planter.last_name,
         email: planter.email,
         phone: planter.phone,
-        image_url: planter.image_url,
+        image_url: planter.image_url ?? legacyTree.planter_photo_url,
         image_rotation: planter.image_rotation ?? 0,
         // organization_id: planter.organization_id,
-        wallet: planter.email ?? planter.phone,
+        wallet: planter.email ?? planter.phone ?? legacyTree.planter_identifier,
         first_registration_at: planter.created_at,
       },
       [
@@ -82,8 +101,8 @@ async function ensureGrowerAccountExists(legacyTree, transaction) {
         "image_rotation"
       ]
     );
+    growerAccount = growerAccounts[0];
   }
-  console.log(`GrowerAccount exists: ${JSON.stringify(growerAccount)}`);
   return growerAccount;
 }
 
@@ -132,27 +151,27 @@ async function migrate() {
         image_url: image_url,
         lat: lat,
         lon: lon,
-        gps_accuracy: gps_accuracy,
         grower_account_id: growerAccount.id,
+        gps_accuracy: gps_accuracy,
         morphology: morphology,
-        age: age,
+        age: isNaN(age) ? 0:age,
         note: note,
         attributes: attributesFormatter(treeAttributes),
         created_at: time_created,
         updated_at: time_updated,
         device_configuration_id: TEMPORARY_DEVICE_CONFIG_ID, //To be populated with field_data.device_configuration_id later
-        session_id: uuid_generate_v4(), // Concept of session doesn't exist for legacy data
+        session_id: generate_uuid_v4(), // Concept of session doesn't exist for legacy data
       });
     };
 
     ws._write = async (legacyTree, enc, next) => {
       const transaction = await knex.transaction();
       try {
-        let growerAcount = await ensureGrowerAccountExists(
+        const growerAccount = await ensureGrowerAccountExists(
           legacyTree,
           transaction
         );
-        const treeAttributes = await trx
+        const treeAttributes = await transaction
           .select()
           .table("public.tree_attributes")
           .where("tree_id", legacyTree.id);
@@ -163,14 +182,15 @@ async function migrate() {
           growerAccount
         );
         const { lat, lon } = captureToInsert;
+        //console.log(`Capture to Insert ${JSON.stringify(captureToInsert)}`);
         await transaction.raw(
           `insert into treetracker.capture (
-        reference_id, image_url, lat, lon, gps_accuracy, grower_account_id, 
-        morphology, age, note, attributes, created_at, updated_at, device_configuration_id, session_id,
-        estimated_geometric_location, estimated_geographic_location 
-      )
-      values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-          ST_PointFromText(?, 4325), ST_SetSRID(ST_PointFromText(?, 4326)))`,
+            reference_id, image_url, lat, lon, gps_accuracy, grower_account_id, 
+            morphology, age, note, attributes, created_at, updated_at, captured_at, device_configuration_id, session_id,
+            estimated_geometric_location, estimated_geographic_location 
+          )
+            values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+            ST_PointFromText(?, 4326), ST_SetSRID(ST_Point(?, ?), 4326))`,
           [
             captureToInsert.reference_id,
             captureToInsert.image_url,
@@ -184,20 +204,22 @@ async function migrate() {
             captureToInsert.attributes,
             captureToInsert.created_at,
             captureToInsert.updated_at,
+            captureToInsert.created_at,
             captureToInsert.device_configuration_id,
             captureToInsert.session_id,
             "POINT(" + lon + " " + lat + ")",
-            "POINT(" + lon + " " + lat + ")",
+            lon,
+            lat
           ]
         );
         transaction.commit();
-        bar.tick();
-        if (bar.complete) {
-          console.log("Migration Complete");
-        }
       } catch (e) {
         console.log(`Error processing tree id ${legacyTree.id} ${e}`);
         transaction.rollback();
+      }
+      bar.tick();
+      if (bar.complete) {
+        console.log("Migration Complete");
       }
       next();
     };
