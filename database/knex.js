@@ -1,8 +1,9 @@
 const expect = require("expect-runtime");
 const connection = process.env.DATABASE_URL
 expect(connection).to.match(/^postgresql:\//);
-const urlregexp = /postgresql:\/\/(.+):(.+)@(.+):(\d+)\/(.+)\?ssl=true/g;
+const urlregexp = /postgresql:\/\/(.+):(.+)@(.+):(\d+)\/(.+)/g;
 const dbConnValues = [...connection.matchAll(urlregexp)][0];
+
 let knexConfig = {
   client: "pg",
   debug: process.env.NODE_LOG_LEVEL === "debug" ? true : false,
