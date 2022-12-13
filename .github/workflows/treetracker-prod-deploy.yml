@@ -1,0 +1,33 @@
+name: Deploy Service to Prod Env
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'git-tag'
+        required: true
+
+env:
+  project-directory: ./
+
+jobs:
+  deploy-prod:
+    name: Deploy latest to prod environment, requires approval
+    runs-on: ubuntu-latest
+    if: |
+      github.repository_owner == 'Greenstand'
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install kustomize
+        run: curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+      - name: Run kustomize
+        run: (cd deployment/overlays/production && ../../../kustomize edit set image greenstand/${{ github.event.repository.name }}:${{ github.event.inputs.environment }})
+      - name: Commit prod kustomization file with new app version
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit -am "chore: bump docker image tag ${{ github.event.inputs.environment }} [skip ci]"
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}

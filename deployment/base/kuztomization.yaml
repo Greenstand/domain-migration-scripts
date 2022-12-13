@@ -1,0 +1,13 @@
+resources:
+  - migrate-captures-service.yaml
+  - migrate-devicess-service.yaml
+  - migrate-entity-ids-service.yaml
+  - migrate-planters-service.yaml
+  - migrate-raw-captures-service.yaml
+  - migrate-regions-service.yaml
+  - migrate-species-service.yaml
+  - migrate-stakeholders-service.yaml
+  - migrate-tags-service.yaml
+  - migrate-trees-service.yaml
+  - namespace.yaml
+  - database-connection-sealed-secret.yaml
