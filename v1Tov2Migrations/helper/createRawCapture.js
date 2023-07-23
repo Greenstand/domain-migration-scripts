@@ -61,6 +61,7 @@ const createRawCapture = async (tree, treeAttributes, sessionId, trx) => {
     .first();
 
   if (existingRawCapture) {
+    console.log('Raw capture already exists', tree.uuid);
     return existingRawCapture;
   }
 

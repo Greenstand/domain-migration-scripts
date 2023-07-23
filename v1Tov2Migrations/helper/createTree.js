@@ -35,6 +35,9 @@ const createTree = async (capture, trx, captureTags) => {
     updated_at: new Date().toISOString(),
   };
 
+
+  
+
   await trx.insert(treeToCreate).into('treetracker.tree');
 
   for (const { tag_id } of captureTags) {

@@ -29,6 +29,10 @@ const createCapture = async (rawCapture, tree, trx, treeTags) => {
       .table('public.tree_species')
       .where({ id: tree.species_id })
       .first();
+    
+    if(!species){
+      throw new Error(`can not find species of tree: ${tree.id}`);
+    }
 
     speciesId = species.uuid;
   }
@@ -45,7 +49,7 @@ const createCapture = async (rawCapture, tree, trx, treeTags) => {
     estimated_geometric_location: trx.raw(
       `ST_PointFromText('POINT(${lon} ${lat})', 4326)`,
     ),
-    gps_accuracy: rawCapture.gps_accuracy,
+    gps_accuracy: rawCapture.gps_accuracy && Math.round(parseFloat(rawCapture.gps_accuracy)),
     morphology: tree.morphology,
     age: tree.age === 'over_two_years' ? 2 : 0,
     note: rawCapture.note,

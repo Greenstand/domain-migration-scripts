@@ -14,8 +14,16 @@ async function migrate() {
         join field_data.wallet_registration wr on s.originating_wallet_registration_id = wr.id
         join public.trees pt on rc.id::text = pt.uuid
         left join treetracker.capture tc on rc.id = tc.id
-        where (rc.status = 'approved' and tc.id is null) or 
+        where 
+        (
+        (rc.status = 'approved' and tc.id is null) or 
         (rc.status != 'approved' and pt.active = true and pt.approved = true)
+        ) AND
+	rc.reference_id != 2463005
+	--pt.planting_organization_id = 1642
+	order by pt.id asc
+	--offset 0
+	--limit 10000
     `;
     const rowCountResult = await knex.select(
       knex.raw(`count(1) from (${base_query_string}) as src`),
@@ -27,8 +35,8 @@ async function migrate() {
     }
     console.log(`Migrating ${recordCount} records`);
 
-    const bar = new ProgressBar('Migrating [:bar] :percent :etas', {
-      width: 100,
+    const bar = new ProgressBar('Migrating [:bar] :percent :etas :current/:total (:rate)', {
+      width: 40,
       total: recordCount,
     });
 
@@ -43,7 +51,7 @@ async function migrate() {
 
         // migrate tree_tags as well
         const treeTags = await trx.raw(
-          `select t.uuid from public.tree_tag tt join tag t on tt.tag_id = t.id where tt.tree_id = ?`,
+          `select distinct(t.uuid) from public.tree_tag tt join tag t on tt.tag_id = t.id where tt.tree_id = ?`,
           [+tree.id],
         );
 
