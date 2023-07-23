@@ -1,3 +1,18 @@
+# [1.2.0](https://github.com/Greenstand/domain-migration-scripts/compare/v1.1.0...v1.2.0) (2023-07-23)
+
+
+### Bug Fixes
+
+* change back to use now time ([eb8d917](https://github.com/Greenstand/domain-migration-scripts/commit/eb8d917ed446ee728940b5e60c03c45a4badc75d))
+* use current time for capture: created at ([812635b](https://github.com/Greenstand/domain-migration-scripts/commit/812635b70f4f04c59390a4a22452d7f2bb417d12))
+
+
+### Features
+
+* morphology allow null ([64546ec](https://github.com/Greenstand/domain-migration-scripts/commit/64546ecf6c6dd1607ba746a0b46678f124a95b70))
+* now limit for migrate capture ([ba49133](https://github.com/Greenstand/domain-migration-scripts/commit/ba49133c45d4ecd5a9284c426ab612a3367bec34))
+* successuflly run for capture, tag, round the gps ([bca9d7f](https://github.com/Greenstand/domain-migration-scripts/commit/bca9d7f8ed7e2d8b1e1e781498a667789d23c4ee))
+
 # [1.1.0](https://github.com/Greenstand/domain-migration-scripts/compare/v1.0.3...v1.1.0) (2023-05-30)
 
 
