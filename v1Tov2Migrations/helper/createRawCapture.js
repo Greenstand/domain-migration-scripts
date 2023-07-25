@@ -61,8 +61,7 @@ const createRawCapture = async (tree, treeAttributes, sessionId, trx) => {
     .first();
 
   if (existingRawCapture) {
-    // 1000052 1000047
-    console.log('Raw capture already exists', tree.id);
+    console.log('Raw capture already exists', tree.uuid);
 
     // update status
     await trx('field_data.raw_capture')
