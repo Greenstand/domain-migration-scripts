@@ -19,11 +19,11 @@ async function migrate() {
         (rc.status = 'approved' and tc.id is null) or 
         (rc.status != 'approved' and pt.active = true and pt.approved = true)
         ) AND
-	rc.reference_id != 2463005
-	--pt.planting_organization_id = 1642
-	order by pt.id asc
-	--offset 0
-	--limit 10000
+        rc.reference_id != 2463005
+        --pt.planting_organization_id = 1642
+        order by pt.id asc
+        --offset 0
+        --limit 10000
     `;
     const rowCountResult = await knex.select(
       knex.raw(`count(1) from (${base_query_string}) as src`),
@@ -35,10 +35,10 @@ async function migrate() {
     }
     console.log(`Migrating ${recordCount} records`);
 
-    const bar = new ProgressBar('Migrating [:bar] :percent :etas :current/:total (:rate)', {
-      width: 40,
-      total: recordCount,
-    });
+    const bar = new ProgressBar(
+      'Migrating [:bar] :percent :etas :current/:total (:rate)',
+      { width: 40, total: recordCount },
+    );
 
     const trx = await knex.transaction();
     ws._write = async (rawCapture, enc, next) => {

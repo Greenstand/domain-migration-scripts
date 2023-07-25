@@ -62,6 +62,17 @@ const createRawCapture = async (tree, treeAttributes, sessionId, trx) => {
 
   if (existingRawCapture) {
     console.log('Raw capture already exists', tree.uuid);
+
+    // update status
+    await trx('field_data.raw_capture')
+      .update({ status })
+      .where({ id: rawCapture.id });
+
+    if (status === 'rejected') {
+      await trx('treetracker.capture')
+        .update({ status: 'deleted' })
+        .where({ id: rawCapture.id });
+    }
     return existingRawCapture;
   }
 
