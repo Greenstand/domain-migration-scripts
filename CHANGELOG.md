@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/Greenstand/domain-migration-scripts/compare/v1.2.0...v1.2.1) (2023-07-25)
+
+
+### Bug Fixes
+
+* update migrate raw captures ([203b19d](https://github.com/Greenstand/domain-migration-scripts/commit/203b19db9f1ee5cefb077a446510936642b37353))
+
 # [1.2.0](https://github.com/Greenstand/domain-migration-scripts/compare/v1.1.0...v1.2.0) (2023-07-23)
 
 
