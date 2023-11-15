@@ -16,14 +16,13 @@ async function migrate() {
         left join treetracker.capture tc on rc.id = tc.id
         where 
         (
-        (rc.status = 'approved' and tc.id is null) or 
-        (rc.status != 'approved' and pt.active = true and pt.approved = true)
+          (rc.status = 'approved' and tc.id is null) or 
+          (rc.status != 'approved' and pt.active = true and pt.approved = true) or
+          (pt.token_id is not null and tc.token_id is null) or
+          (pt.token_id is null and tc.token_id is not null)
         ) AND
         rc.reference_id != 2463005
-        --pt.planting_organization_id = 1642
         order by pt.id asc
-        --offset 0
-        --limit 10000
     `;
     const rowCountResult = await knex.select(
       knex.raw(`count(1) from (${base_query_string}) as src`),

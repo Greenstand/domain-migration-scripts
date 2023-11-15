@@ -2,11 +2,14 @@ const createCapture = async (rawCapture, tree, trx, treeTags) => {
   const existingCapture = await trx
     .select()
     .table('treetracker.capture')
-    .where('reference_id', rawCapture.reference_id)
-    .orWhere('id', rawCapture.id)
+    .where('id', rawCapture.id)
     .first();
 
   if (existingCapture) {
+    await trx('treetracker.capture').where({ id: rawCapture.id }).update({
+      token_id: tree.token_id,
+      token_issued: !!tree.token_id,
+    });
     return existingCapture;
   }
 
@@ -29,16 +32,16 @@ const createCapture = async (rawCapture, tree, trx, treeTags) => {
       .table('public.tree_species')
       .where({ id: tree.species_id })
       .first();
-    
-    if(!species){
+
+    if (!species) {
       throw new Error(`can not find species of tree: ${tree.id}`);
     }
 
     speciesId = species.uuid;
   }
 
-  const {lat} = rawCapture;
-  const {lon} = rawCapture;
+  const { lat } = rawCapture;
+  const { lon } = rawCapture;
 
   const captureToCreate = {
     id: rawCapture.id,
@@ -49,7 +52,9 @@ const createCapture = async (rawCapture, tree, trx, treeTags) => {
     estimated_geometric_location: trx.raw(
       `ST_PointFromText('POINT(${lon} ${lat})', 4326)`,
     ),
-    gps_accuracy: rawCapture.gps_accuracy && Math.round(parseFloat(rawCapture.gps_accuracy)),
+    gps_accuracy:
+      rawCapture.gps_accuracy &&
+      Math.round(parseFloat(rawCapture.gps_accuracy)),
     morphology: tree.morphology,
     age: tree.age === 'over_two_years' ? 2 : 0,
     note: rawCapture.note,
@@ -66,6 +71,8 @@ const createCapture = async (rawCapture, tree, trx, treeTags) => {
     planting_organization_id: plantingOrganizationId,
     species_id: speciesId,
     captured_at: rawCapture.captured_at,
+    token_issued: !!tree.token_id,
+    token_id: tree.token_id,
   };
 
   await trx.insert(captureToCreate).into('treetracker.capture');
