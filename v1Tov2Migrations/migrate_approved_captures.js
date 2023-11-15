@@ -18,8 +18,15 @@ async function migrate() {
         (
           (rc.status = 'approved' and tc.id is null) or 
           (rc.status != 'approved' and pt.active = true and pt.approved = true) or
-          (pt.token_id is not null and tc.token_id is null) or
-          (pt.token_id is null and tc.token_id is not null)
+          (
+            (
+              (pt.token_id is not null and tc.token_id is null) 
+                or
+              (pt.token_id is null and tc.token_id is not null)
+            ) 
+              and 
+            tc.id is not null and pt.active = true and pt.approved = true
+          )
         ) AND
         rc.reference_id != 2463005
         order by pt.id asc
