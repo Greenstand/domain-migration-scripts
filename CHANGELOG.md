@@ -1,3 +1,11 @@
+## [1.2.2](https://github.com/Greenstand/domain-migration-scripts/compare/v1.2.1...v1.2.2) (2023-11-15)
+
+
+### Bug Fixes
+
+* add token details ([e7d9d5b](https://github.com/Greenstand/domain-migration-scripts/commit/e7d9d5bc0243e78f591561757c0db3879f86e60c))
+* update query ([e1114ef](https://github.com/Greenstand/domain-migration-scripts/commit/e1114ef66f0b7dc37f07de966c328d7f39e93d9f))
+
 ## [1.2.1](https://github.com/Greenstand/domain-migration-scripts/compare/v1.2.0...v1.2.1) (2023-07-25)
 
 
