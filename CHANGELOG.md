@@ -1,3 +1,11 @@
+## [1.2.4](https://github.com/Greenstand/domain-migration-scripts/compare/v1.2.3...v1.2.4) (2024-04-23)
+
+
+### Bug Fixes
+
+* add log ([383abb5](https://github.com/Greenstand/domain-migration-scripts/commit/383abb56c2fabf8c5676d62ec276a2238ff61ef3))
+* semantic release ([b95b03d](https://github.com/Greenstand/domain-migration-scripts/commit/b95b03d70baeba8092d0dfba843e9a77332df50f))
+
 ## [1.2.3](https://github.com/Greenstand/domain-migration-scripts/compare/v1.2.2...v1.2.3) (2023-11-15)
 
 
