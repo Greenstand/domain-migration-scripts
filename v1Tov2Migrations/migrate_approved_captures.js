@@ -61,6 +61,7 @@ async function migrate() {
           [+tree.id],
         );
 
+        console.log('migrating ', tree.id)
         await createCapture(rawCapture, tree, trx, treeTags.rows);
 
         bar.tick();
