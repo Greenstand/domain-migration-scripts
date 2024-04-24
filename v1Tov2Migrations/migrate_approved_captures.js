@@ -29,7 +29,7 @@ async function migrate() {
           )
         ) AND
         rc.reference_id != 2463005
-        order by pt.id asc
+        order by pt.id asc limit 100000
     `;
     const rowCountResult = await knex.select(
       knex.raw(`count(1) from (${base_query_string}) as src`),
