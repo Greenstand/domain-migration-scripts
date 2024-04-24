@@ -1,3 +1,10 @@
+## [1.2.5](https://github.com/Greenstand/domain-migration-scripts/compare/v1.2.4...v1.2.5) (2024-04-24)
+
+
+### Bug Fixes
+
+* trigger release ([5d1ab53](https://github.com/Greenstand/domain-migration-scripts/commit/5d1ab538666bc85eb76ec3f20b7ee9275facf75e))
+
 ## [1.2.4](https://github.com/Greenstand/domain-migration-scripts/compare/v1.2.3...v1.2.4) (2024-04-23)
 
 
