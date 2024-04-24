@@ -1,3 +1,10 @@
+## [1.2.6](https://github.com/Greenstand/domain-migration-scripts/compare/v1.2.5...v1.2.6) (2024-04-24)
+
+
+### Bug Fixes
+
+* add limit ([9a11af4](https://github.com/Greenstand/domain-migration-scripts/commit/9a11af4dc840ddf38350da46ce8ad826e0dd45b3))
+
 ## [1.2.5](https://github.com/Greenstand/domain-migration-scripts/compare/v1.2.4...v1.2.5) (2024-04-24)
 
 
