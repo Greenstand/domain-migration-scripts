@@ -64,6 +64,7 @@ async function migrate() {
     const trx = await knex.transaction();
     ws._write = async (tree, enc, next) => {
       try {
+	console.log('processing ', tree.id);
         const planter = await trx
           .select()
           .table('public.planter')
