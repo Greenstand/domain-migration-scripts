@@ -46,8 +46,9 @@ async function migrate() {
       { width: 40, total: recordCount },
     );
 
-    const trx = await knex.transaction();
     ws._write = async (rawCapture, enc, next) => {
+      console.log('processing ', rawCapture.id);
+      const trx = await knex.transaction();
       try {
         const tree = await trx
           .select()
@@ -61,12 +62,13 @@ async function migrate() {
           [+tree.id],
         );
 
-        console.log('migrating ', tree.id)
+        console.log('migrating ', tree.id);
         await createCapture(rawCapture, tree, trx, treeTags.rows);
 
+        await trx.commit();
+        console.log('processed ', rawCapture.id);
         bar.tick();
         if (bar.complete) {
-          await trx.commit();
           console.log('Migration Complete');
           process.exit();
         }

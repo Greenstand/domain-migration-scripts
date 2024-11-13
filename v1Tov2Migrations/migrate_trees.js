@@ -27,13 +27,17 @@ async function migrate() {
     }
     console.log(`Migrating ${recordCount} records`);
 
-    const bar = new ProgressBar('Migrating [:bar] :percent :etas :current/:total (:rate)', {
-      width: 40,
-      total: recordCount,
-    });
+    const bar = new ProgressBar(
+      'Migrating [:bar] :percent :etas :current/:total (:rate)',
+      {
+        width: 40,
+        total: recordCount,
+      },
+    );
 
-    const trx = await knex.transaction();
     ws._write = async (capture, enc, next) => {
+      console.log('processing ', capture.id);
+      const trx = await knex.transaction();
       try {
         // migrate capture_tags as well, do we want to?
         const captureTags = await trx.raw(
@@ -43,9 +47,10 @@ async function migrate() {
 
         await createTree(capture, trx, captureTags.rows);
 
+        await trx.commit();
+        console.log('processed ', capture.id);
         bar.tick();
         if (bar.complete) {
-          await trx.commit();
           console.log('Migration Complete');
           process.exit();
         }
