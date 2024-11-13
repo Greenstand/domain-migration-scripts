@@ -1,3 +1,11 @@
+## [1.2.8](https://github.com/Greenstand/domain-migration-scripts/compare/v1.2.7...v1.2.8) (2024-11-13)
+
+
+### Bug Fixes
+
+* minor fix ([5dbe149](https://github.com/Greenstand/domain-migration-scripts/commit/5dbe1490545a2d27f5f4e3826d3d5d9ed17f8adc))
+* transactions processed by row not in batch ([1e4e19d](https://github.com/Greenstand/domain-migration-scripts/commit/1e4e19d82ac4e513e2ca058ad1c7b6a1318aafb2))
+
 ## [1.2.7](https://github.com/Greenstand/domain-migration-scripts/compare/v1.2.6...v1.2.7) (2024-11-12)
 
 
