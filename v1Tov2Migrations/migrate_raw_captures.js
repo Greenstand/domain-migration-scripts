@@ -61,10 +61,10 @@ async function migrate() {
       { width: 40, total: recordCount },
     );
 
-    const trx = await knex.transaction();
     ws._write = async (tree, enc, next) => {
+      console.log('processing ', tree.id);
+      const trx = await knex.transaction();
       try {
-	console.log('processing ', tree.id);
         const planter = await trx
           .select()
           .table('public.planter')
@@ -137,9 +137,10 @@ async function migrate() {
 
         await createRawCapture(tree, treeAttributes, sessionId, trx);
 
+        await trx.commit();
+        console.log('processed ', tree.id);
         bar.tick();
         if (bar.complete) {
-          await trx.commit();
           console.log('Migration Complete');
           process.exit();
         }
